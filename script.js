@@ -17,6 +17,9 @@ document.addEventListener("DOMContentLoaded", () => {
   loadCategory(35, "comedyRow");
   loadCategory(18, "dramaRow");
   loadCategory(27, "horrorRow");
+
+  setupScrollButtons();
+  setupInfoModal();
 });
 
 /* SEARCH */
@@ -84,5 +87,41 @@ function renderMovies(movies, container) {
     });
 
     container.appendChild(card);
+  });
+}
+
+/* SCROLL SLIDERS */
+function setupScrollButtons() {
+  document.querySelectorAll(".row").forEach(row => {
+    const container = row.querySelector(".row-posters");
+    const left = row.querySelector(".scroll-btn.left");
+    const right = row.querySelector(".scroll-btn.right");
+
+    left.addEventListener("click", () => {
+      container.scrollBy({ left: -300, behavior: "smooth" });
+    });
+
+    right.addEventListener("click", () => {
+      container.scrollBy({ left: 300, behavior: "smooth" });
+    });
+  });
+}
+
+/* INFO MODAL */
+function setupInfoModal() {
+  const infoBtn = document.getElementById("infoBtn");
+  const modal = document.getElementById("infoModal");
+  const close = document.getElementById("closeInfo");
+
+  infoBtn.addEventListener("click", () => {
+    modal.classList.remove("hidden");
+  });
+
+  close.addEventListener("click", () => {
+    modal.classList.add("hidden");
+  });
+
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) modal.classList.add("hidden");
   });
 }
