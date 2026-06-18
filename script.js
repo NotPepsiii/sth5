@@ -9,8 +9,8 @@ const MOVIE_EMBED_BASE = "https://embedmaster.link";
 // LocalStorage key for saved TV pattern
 const TV_PATTERN_KEY = "pepsi_tv_embed_pattern";
 
-// Candidate TV patterns to test (placeholders: {id}, {s}, {e}, {player_id})
-const DEFAULT_TV_PATTERNS = [
+// Candidate TV patterns to try automatically (placeholders: {id}, {s}, {e}, {player_id})
+const CANDIDATE_PATTERNS = [
   "/player/tv/{id}/{s}/{e}?player_id={player_id}",
   "/tv/{id}/season/{s}/episode/{e}?player_id={player_id}",
   "/series/{id}/season/{s}/episode/{e}?player_id={player_id}",
@@ -21,6 +21,7 @@ const DEFAULT_TV_PATTERNS = [
 
 // DOM
 const player = document.getElementById("player");
+const playerStatus = document.getElementById("playerStatus");
 const searchInput = document.getElementById("searchInput");
 const searchBtn = document.getElementById("searchBtn");
 const searchSection = document.getElementById("searchSection");
@@ -46,23 +47,17 @@ const seasonSelect = document.getElementById("seasonSelect");
 const episodeSelect = document.getElementById("episodeSelect");
 const playEpisodeBtn = document.getElementById("playEpisodeBtn");
 const seriesError = document.getElementById("seriesError");
+const patternInfo = document.getElementById("patternInfo");
 const episodeList = document.getElementById("episodeList");
 
-const tryButtonsContainer = document.getElementById("tryButtons");
-const usePatternBtn = document.getElementById("usePatternBtn");
-const openTestBtn = document.getElementById("openTestBtn");
-const currentPatternLabel = document.getElementById("currentPatternLabel");
-
-// State
+// STATE
 let currentSeriesId = null;
 let currentSeasons = [];
 let currentEpisodes = [];
-let lastTestedUrl = null;
-let lastTestedPattern = null;
+let trying = false;
 
 // INIT
 document.addEventListener("DOMContentLoaded", () => {
-  renderTryButtons();
   loadPopularMovies();
   loadTopRatedMovies();
   loadGenreMovies(28, actionRow);
@@ -71,29 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadPopularSeries();
 
   const saved = localStorage.getItem(TV_PATTERN_KEY);
-  if (saved) currentPatternLabel.textContent = `Saved pattern: ${saved}`;
-
-  tryButtonsContainer.addEventListener("click", (e) => {
-    const btn = e.target.closest(".try-btn");
-    if (!btn) return;
-    const pattern = btn.dataset.pattern;
-    handleTryPattern(pattern);
-  });
-
-  usePatternBtn.addEventListener("click", () => {
-    if (!lastTestedPattern) return;
-    localStorage.setItem(TV_PATTERN_KEY, lastTestedPattern);
-    currentPatternLabel.textContent = `Saved pattern: ${lastTestedPattern}`;
-    usePatternBtn.style.display = "none";
-    openTestBtn.style.display = "none";
-    showSeriesMessage("Pattern saved. Series will auto-play using this pattern.");
-  });
-
-  openTestBtn.addEventListener("click", () => {
-    if (!lastTestedUrl) return;
-    // open tested URL in new tab only when user explicitly clicks this button
-    window.open(lastTestedUrl, "_blank");
-  });
+  if (saved) patternInfo.textContent = `Saved series pattern: ${saved}`;
 });
 
 // TABS
@@ -215,6 +188,7 @@ function renderRow(items, container, isTvFlag) {
       } else {
         const embedUrl = `${MOVIE_EMBED_BASE}/movie/${tmdbId}`;
         player.src = embedUrl;
+        playerStatus.textContent = `Playing movie ${tmdbId}`;
         if (window.innerWidth < 900) document.querySelector(".player-section").scrollIntoView({ behavior: "smooth" });
       }
     });
@@ -273,31 +247,62 @@ seasonSelect.addEventListener("change", async () => {
   await loadSeasonEpisodes(currentSeriesId, seasonNum);
 });
 
-playEpisodeBtn.addEventListener("click", () => {
+// PLAY: automatic pattern detection and save
+playEpisodeBtn.addEventListener("click", async () => {
+  if (trying) return;
   const seasonVal = seasonSelect.value;
   const episodeVal = episodeSelect.value;
   const seasonNum = normalizeSeason(seasonVal);
   const episodeNum = normalizeEpisode(episodeVal);
   if (seasonNum === null || episodeNum === null) return;
 
+  playerStatus.textContent = "Resolving series player pattern…";
+  trying = true;
+
+  // If user previously saved a working pattern, use it immediately
   const savedPattern = localStorage.getItem(TV_PATTERN_KEY);
-  let url;
   if (savedPattern) {
-    url = buildUrlFromPattern(savedPattern, { id: currentSeriesId, s: seasonNum, e: episodeNum });
-  } else {
-    // default: /player/tv/{id}/{s}/{e} with a valid player_id appended
-    url = `${MOVIE_EMBED_BASE}/player/tv/${currentSeriesId}/${seasonNum}/${episodeNum}`;
-    if (!/player_id=/.test(url)) {
-      const sep = url.includes("?") ? "&" : "?";
-      url = `${url}${sep}player_id=${generatePlayerId()}`;
-    }
+    const url = buildUrlFromPattern(savedPattern, { id: currentSeriesId, s: seasonNum, e: episodeNum });
+    setPlayerSrc(url);
+    patternInfo.textContent = `Using saved pattern: ${savedPattern}`;
+    trying = false;
+    return;
   }
 
-  // set iframe src to play inside the page (no new tab)
-  player.src = url;
-  if (window.innerWidth < 900) document.querySelector(".player-section").scrollIntoView({ behavior: "smooth" });
+  // Try candidate patterns in order
+  let success = false;
+  for (const pattern of CANDIDATE_PATTERNS) {
+    const url = buildUrlFromPattern(pattern, { id: currentSeriesId, s: seasonNum, e: episodeNum });
+    playerStatus.textContent = `Trying pattern: ${pattern}`;
+    setPlayerSrc(url);
+
+    // wait for load or timeout
+    const ok = await waitForIframeLoadOrDetect(url, 2500);
+    if (ok) {
+      // Save the working pattern (store the pattern string, not the full URL)
+      localStorage.setItem(TV_PATTERN_KEY, pattern);
+      patternInfo.textContent = `Saved series pattern: ${pattern}`;
+      playerStatus.textContent = `Pattern matched: ${pattern}`;
+      success = true;
+      break;
+    }
+    // else try next pattern
+  }
+
+  if (!success) {
+    // fallback: set a reasonable default and show the iframe src for debugging
+    const fallback = `/tv/${currentSeriesId}/season/${seasonNum}/episode/${episodeNum}`;
+    const fallbackUrl = MOVIE_EMBED_BASE + fallback;
+    setPlayerSrc(fallbackUrl);
+    playerStatus.textContent = `No pattern matched automatically. Fallback set. If you still see 404, open DevTools and copy iframe src and paste it here.`;
+    seriesError.style.display = "block";
+    seriesError.textContent = `Auto-detection failed. iframe src: ${player.src}`;
+  }
+
+  trying = false;
 });
 
+// load episodes for a season
 async function loadSeasonEpisodes(tvId, seasonNumber) {
   seriesError.style.display = "none";
   episodeList.innerHTML = "<p>Loading episodes…</p>";
@@ -337,24 +342,20 @@ async function loadSeasonEpisodes(tvId, seasonNumber) {
     item.className = "episode-item";
     item.innerHTML = `<strong>${epNum}. ${escapeHtml(ep.name || `Episode ${epNum}`)}</strong><div class="muted">${escapeHtml(ep.overview || "")}</div>`;
     item.addEventListener("click", () => {
-      // set selects
       seasonSelect.value = String(seasonNum);
       episodeSelect.value = String(epNum);
-
-      // build URL (saved pattern or default) and set iframe.src — no new tab
+      // Use saved pattern if exists, else attempt detection when Play is pressed
       const savedPattern = localStorage.getItem(TV_PATTERN_KEY);
-      let url;
       if (savedPattern) {
-        url = buildUrlFromPattern(savedPattern, { id: tvId, s: seasonNum, e: epNum });
+        const url = buildUrlFromPattern(savedPattern, { id: currentSeriesId, s: seasonNum, e: epNum });
+        setPlayerSrc(url);
+        playerStatus.textContent = `Playing using saved pattern`;
       } else {
-        url = `${MOVIE_EMBED_BASE}/player/tv/${tvId}/${seasonNum}/${epNum}`;
-        if (!/player_id=/.test(url)) {
-          const sep = url.includes("?") ? "&" : "?";
-          url = `${url}${sep}player_id=${generatePlayerId()}`;
-        }
+        // set iframe to a reasonable default while user presses Play to auto-detect
+        const url = `${MOVIE_EMBED_BASE}/tv/${currentSeriesId}/season/${seasonNum}/episode/${epNum}`;
+        setPlayerSrc(url);
+        playerStatus.textContent = `Preview set — press Play to auto-detect working pattern`;
       }
-
-      player.src = url;
       if (window.innerWidth < 900) document.querySelector(".player-section").scrollIntoView({ behavior: "smooth" });
     });
     episodeList.appendChild(item);
@@ -364,54 +365,13 @@ async function loadSeasonEpisodes(tvId, seasonNumber) {
   episodeList.scrollTop = 0;
 }
 
-// TRY PATTERNS
-function renderTryButtons() {
-  tryButtonsContainer.innerHTML = "";
-  DEFAULT_TV_PATTERNS.forEach(p => {
-    const btn = document.createElement("button");
-    btn.className = "try-btn";
-    btn.dataset.pattern = p;
-    btn.textContent = p;
-    tryButtonsContainer.appendChild(btn);
-  });
-}
-
-function handleTryPattern(pattern) {
-  if (!currentSeriesId) {
-    showSeriesMessage("No series selected.");
-    return;
+// Set iframe src and update status
+function setPlayerSrc(url) {
+  try {
+    player.src = url;
+  } catch (e) {
+    console.error("Failed to set iframe src", e);
   }
-
-  const seasonVal = seasonSelect.value || (currentSeasons[0] && String(currentSeasons[0].season_number)) || "1";
-  const episodeVal = episodeSelect.value || (currentEpisodes[0] && String(currentEpisodes[0].episode_number)) || "1";
-
-  // fill placeholders including a valid player_id if pattern expects it
-  const replacements = {
-    "{id}": String(currentSeriesId),
-    "{s}": String(seasonVal),
-    "{e}": String(episodeVal),
-    "{player_id}": generatePlayerId()
-  };
-
-  let url = pattern;
-  Object.keys(replacements).forEach(k => {
-    url = url.replace(new RegExp(k, "g"), replacements[k]);
-  });
-
-  if (url.startsWith("/")) url = MOVIE_EMBED_BASE + url;
-  if (!/^https?:\/\//i.test(url) && !url.startsWith(MOVIE_EMBED_BASE)) {
-    url = MOVIE_EMBED_BASE + (url.startsWith("/") ? url : "/" + url);
-  }
-
-  lastTestedUrl = url;
-  lastTestedPattern = pattern;
-  usePatternBtn.style.display = "inline-block";
-  openTestBtn.style.display = "inline-block";
-  currentPatternLabel.textContent = `Last tested: ${pattern}`;
-
-  // set iframe src to test inside the page (no automatic new tab)
-  player.src = url;
-  showSeriesMessage(`Testing: ${url} — if it loads correctly, click "Use this pattern" to save it.`);
 }
 
 // Build URL from pattern and placeholders. If pattern starts with '/', prefix MOVIE_EMBED_BASE.
@@ -428,6 +388,63 @@ function buildUrlFromPattern(pattern, { id, s, e }) {
     url = `${url}${sep}player_id=${playerId}`;
   }
   return url;
+}
+
+// Wait for iframe load or detect cross-origin access as success
+function waitForIframeLoadOrDetect(testUrl, timeoutMs = 2500) {
+  return new Promise(resolve => {
+    let resolved = false;
+    const onLoad = () => {
+      if (resolved) return;
+      // Try to access iframe document title to detect 404 text (if same-origin)
+      try {
+        const doc = player.contentDocument || player.contentWindow.document;
+        const title = (doc && doc.title) ? doc.title.toLowerCase() : "";
+        if (title.includes("404") || title.includes("page not found") || title.includes("not found")) {
+          resolved = true;
+          resolve(false);
+        } else {
+          resolved = true;
+          resolve(true);
+        }
+      } catch (err) {
+        // Cross-origin access error — usually indicates a real player page (not our page), treat as success
+        resolved = true;
+        resolve(true);
+      }
+    };
+
+    const onError = () => {
+      if (resolved) return;
+      resolved = true;
+      resolve(false);
+    };
+
+    // attach listeners
+    player.addEventListener("load", onLoad, { once: true });
+    player.addEventListener("error", onError, { once: true });
+
+    // fallback timeout
+    setTimeout(() => {
+      if (resolved) return;
+      // try one last access attempt
+      try {
+        const doc = player.contentDocument || player.contentWindow.document;
+        const title = (doc && doc.title) ? doc.title.toLowerCase() : "";
+        if (title.includes("404") || title.includes("page not found") || title.includes("not found")) {
+          resolved = true;
+          resolve(false);
+        } else {
+          resolved = true;
+          resolve(true);
+        }
+      } catch (err) {
+        // cross-origin -> assume success
+        resolved = true;
+        resolve(true);
+      }
+    }, timeoutMs);
+  });
 }
 
 // Generate a valid 16-character alphanumeric player_id
@@ -488,12 +505,6 @@ function normalizeEpisode(val) {
 function showSeriesError(msg) {
   seriesError.textContent = msg;
   seriesError.style.display = "block";
-}
-
-function showSeriesMessage(msg) {
-  seriesError.textContent = msg;
-  seriesError.style.display = "block";
-  setTimeout(() => { seriesError.style.display = "none"; }, 4000);
 }
 
 // UTIL
