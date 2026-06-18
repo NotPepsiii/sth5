@@ -1,32 +1,16 @@
-// ---------------------------
 // CONFIG
-// ---------------------------
 const TMDB_API_KEY = "35ee82bcad013e6a6237a0a087d7eb32";
 const TMDB_BASE = "https://api.themoviedb.org/3";
 const TMDB_IMG = "https://image.tmdb.org/t/p/w300";
 
-// Default embed base for movies (confirmed working)
+// Movie embed base (movies were working on this)
 const MOVIE_EMBED_BASE = "https://embedmaster.link";
 
-// LocalStorage key for saved TV pattern
-const TV_PATTERN_KEY = "pepsi_tv_embed_pattern";
+// The special URL you requested for series playback
+const SERIES_DIRECT_URL = "https://embedmaster.com/?ref=embdmstrplayer.com";
 
-// Common TV patterns to try (placeholders: {id}, {s}, {e})
-const DEFAULT_TV_PATTERNS = [
-  "/tv/{id}/season/{s}/episode/{e}",
-  "/series/{id}/season/{s}/episode/{e}",
-  "/watch/{id}?season={s}&episode={e}",
-  "/player/tv/{id}/{s}/{e}",
-  "/embed/tv/{id}/s{e}e{e}",   // kept for testing; may be invalid
-  "/tv/{id}",
-  "/series/{id}"
-];
-
-// ---------------------------
 // DOM
-// ---------------------------
 const player = document.getElementById("player");
-
 const searchInput = document.getElementById("searchInput");
 const searchBtn = document.getElementById("searchBtn");
 const searchSection = document.getElementById("searchSection");
@@ -54,59 +38,22 @@ const playEpisodeBtn = document.getElementById("playEpisodeBtn");
 const seriesError = document.getElementById("seriesError");
 const episodeList = document.getElementById("episodeList");
 
-const tryButtonsContainer = document.getElementById("tryButtons");
-const usePatternBtn = document.getElementById("usePatternBtn");
-const currentPatternLabel = document.getElementById("currentPatternLabel");
-
-// ---------------------------
-// STATE
-// ---------------------------
+// State
 let currentSeriesId = null;
 let currentSeasons = [];
 let currentEpisodes = [];
-let lastTestedPattern = null;
 
-// ---------------------------
 // INIT
-// ---------------------------
 document.addEventListener("DOMContentLoaded", () => {
-  // populate try buttons
-  renderTryButtons();
-
-  // load rows
   loadPopularMovies();
   loadTopRatedMovies();
-  loadGenreMovies(28, actionRow);   // Action
-  loadGenreMovies(27, horrorRow);   // Horror
-  loadGenreMovies(35, comedyRow);   // Comedy
+  loadGenreMovies(28, actionRow);
+  loadGenreMovies(27, horrorRow);
+  loadGenreMovies(35, comedyRow);
   loadPopularSeries();
-
-  // wire try/use pattern
-  tryButtonsContainer.addEventListener("click", (e) => {
-    const btn = e.target.closest(".try-btn");
-    if (!btn) return;
-    const pattern = btn.dataset.pattern;
-    handleTryPattern(pattern);
-  });
-
-  usePatternBtn.addEventListener("click", () => {
-    if (!lastTestedPattern) return;
-    localStorage.setItem(TV_PATTERN_KEY, lastTestedPattern);
-    currentPatternLabel.textContent = `Saved pattern: ${lastTestedPattern}`;
-    usePatternBtn.style.display = "none";
-    showSeriesMessage("Pattern saved. Series will auto-play using this pattern.");
-  });
-
-  // show saved pattern if exists
-  const saved = localStorage.getItem(TV_PATTERN_KEY);
-  if (saved) {
-    currentPatternLabel.textContent = `Saved pattern: ${saved}`;
-  }
 });
 
-// ---------------------------
 // TABS
-// ---------------------------
 tabMovies.addEventListener("click", () => {
   tabMovies.classList.add("active");
   tabSeries.classList.remove("active");
@@ -123,9 +70,7 @@ tabSeries.addEventListener("click", () => {
   seriesPanel.style.display = "none";
 });
 
-// ---------------------------
 // SEARCH
-// ---------------------------
 searchBtn.addEventListener("click", () => {
   const q = searchInput.value.trim();
   if (!q) return;
@@ -135,9 +80,7 @@ searchInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") searchBtn.click();
 });
 
-// ---------------------------
-// FETCH HELPERS
-// ---------------------------
+// FETCH helper
 async function fetchJson(url) {
   try {
     const res = await fetch(url);
@@ -149,9 +92,7 @@ async function fetchJson(url) {
   }
 }
 
-// ---------------------------
 // LOADERS
-// ---------------------------
 async function loadPopularMovies() {
   const data = await fetchJson(`${TMDB_BASE}/movie/popular?api_key=${TMDB_API_KEY}&language=en-US&page=1`);
   renderRow(data?.results || [], popularRow, false);
@@ -172,9 +113,7 @@ async function loadPopularSeries() {
   renderRow(data?.results || [], seriesRow, true);
 }
 
-// ---------------------------
 // SEARCH (movies + tv)
-// ---------------------------
 async function searchAll(query) {
   searchSection.style.display = "block";
   searchRow.innerHTML = `<p>Searching for "${escapeHtml(query)}"…</p>`;
@@ -193,9 +132,7 @@ async function searchAll(query) {
   searchSection.scrollIntoView({ behavior: "smooth" });
 }
 
-// ---------------------------
 // RENDER
-// ---------------------------
 function renderRow(items, container, isTvFlag) {
   container.innerHTML = "";
   if (!items || items.length === 0) {
@@ -222,7 +159,6 @@ function renderRow(items, container, isTvFlag) {
       </div>
     `;
 
-    // click handler: determine movie vs tv
     card.addEventListener("click", () => {
       const tmdbId = item.id;
       const tvFlag = (typeof isTvFlag === "boolean") ? isTvFlag : !!item._isTv;
@@ -234,7 +170,6 @@ function renderRow(items, container, isTvFlag) {
         moviesView.style.display = "none";
         seriesView.style.display = "";
       } else {
-        // movies use the confirmed movie embed base
         const embedUrl = `${MOVIE_EMBED_BASE}/movie/${tmdbId}`;
         player.src = embedUrl;
         if (window.innerWidth < 900) document.querySelector(".player-section").scrollIntoView({ behavior: "smooth" });
@@ -245,9 +180,7 @@ function renderRow(items, container, isTvFlag) {
   });
 }
 
-// ---------------------------
-// SERIES PANEL / SEASONS / EPISODES
-// ---------------------------
+// SERIES PANEL
 async function openSeriesPanel(tvId) {
   seriesError.style.display = "none";
   episodeList.innerHTML = "";
@@ -297,26 +230,10 @@ seasonSelect.addEventListener("change", async () => {
   await loadSeasonEpisodes(currentSeriesId, seasonNum);
 });
 
-episodeSelect.addEventListener("change", () => {});
-
 playEpisodeBtn.addEventListener("click", () => {
-  const seasonVal = seasonSelect.value;
-  const episodeVal = episodeSelect.value;
-  const seasonNum = normalizeSeason(seasonVal);
-  const episodeNum = normalizeEpisode(episodeVal);
-  if (seasonNum === null || episodeNum === null) return;
-
-  // If user saved a TV pattern, use it. Otherwise try default tv pattern first.
-  const savedPattern = localStorage.getItem(TV_PATTERN_KEY);
-  if (savedPattern) {
-    const url = buildUrlFromPattern(savedPattern, { id: currentSeriesId, s: seasonNum, e: episodeNum });
-    player.src = url;
-  } else {
-    // default attempt: common tv pattern
-    const url = `${MOVIE_EMBED_BASE}/tv/${currentSeriesId}/season/${seasonNum}/episode/${episodeNum}`;
-    player.src = url;
-  }
-
+  // IMPORTANT: per your request, series playback uses the fixed URL below.
+  // This sets the iframe to exactly the URL you provided.
+  player.src = SERIES_DIRECT_URL;
   if (window.innerWidth < 900) document.querySelector(".player-section").scrollIntoView({ behavior: "smooth" });
 });
 
@@ -359,14 +276,8 @@ async function loadSeasonEpisodes(tvId, seasonNumber) {
     item.className = "episode-item";
     item.innerHTML = `<strong>${epNum}. ${escapeHtml(ep.name || `Episode ${epNum}`)}</strong><div class="muted">${escapeHtml(ep.overview || "")}</div>`;
     item.addEventListener("click", () => {
-      seasonSelect.value = String(seasonNum);
-      episodeSelect.value = String(epNum);
-      // use saved pattern if exists
-      const savedPattern = localStorage.getItem(TV_PATTERN_KEY);
-      const url = savedPattern
-        ? buildUrlFromPattern(savedPattern, { id: tvId, s: seasonNum, e: epNum })
-        : `${MOVIE_EMBED_BASE}/tv/${tvId}/season/${seasonNum}/episode/${epNum}`;
-      player.src = url;
+      // clicking an episode also uses the fixed SERIES_DIRECT_URL per your request
+      player.src = SERIES_DIRECT_URL;
       if (window.innerWidth < 900) document.querySelector(".player-section").scrollIntoView({ behavior: "smooth" });
     });
     episodeList.appendChild(item);
@@ -376,58 +287,7 @@ async function loadSeasonEpisodes(tvId, seasonNumber) {
   episodeList.scrollTop = 0;
 }
 
-// ---------------------------
-// TRY EMBED PATTERN HANDLER
-// ---------------------------
-function renderTryButtons() {
-  tryButtonsContainer.innerHTML = "";
-  const patterns = DEFAULT_TV_PATTERNS;
-  patterns.forEach(p => {
-    const btn = document.createElement("button");
-    btn.className = "try-btn";
-    btn.dataset.pattern = p;
-    btn.textContent = p;
-    tryButtonsContainer.appendChild(btn);
-  });
-}
-
-function handleTryPattern(pattern) {
-  if (!currentSeriesId) {
-    showSeriesMessage("No series selected.");
-    return;
-  }
-
-  // choose season/episode values to test: prefer selected, else first available
-  const seasonVal = seasonSelect.value || (currentSeasons[0] && String(currentSeasons[0].season_number)) || "1";
-  const episodeVal = episodeSelect.value || (currentEpisodes[0] && String(currentEpisodes[0].episode_number)) || "1";
-
-  const url = buildUrlFromPattern(pattern, { id: currentSeriesId, s: seasonVal, e: episodeVal });
-
-  // set iframe src so user can see whether it loads
-  lastTestedPattern = pattern;
-  usePatternBtn.style.display = "inline-block";
-  currentPatternLabel.textContent = `Last tested: ${pattern}`;
-  seriesError.style.display = "none";
-  player.src = url;
-
-  // small hint
-  showSeriesMessage(`Testing: ${url} — if it loads, click "Use this pattern" to save it.`);
-}
-
-// Build URL from pattern and placeholders. If pattern starts with '/', prefix MOVIE_EMBED_BASE.
-function buildUrlFromPattern(pattern, { id, s, e }) {
-  let url = pattern.replace(/{id}/g, String(id)).replace(/{s}/g, String(s)).replace(/{e}/g, String(e));
-  if (url.startsWith("/")) url = MOVIE_EMBED_BASE + url;
-  // if pattern looks like query style (contains '?') and doesn't start with '/', prefix base + '/watch' fallback
-  if (!/^https?:\/\//i.test(url) && !url.startsWith(MOVIE_EMBED_BASE)) {
-    url = MOVIE_EMBED_BASE + (url.startsWith("/") ? url : "/" + url);
-  }
-  return url;
-}
-
-// ---------------------------
-// VALIDATION / NORMALIZATION
-// ---------------------------
+// VALIDATION
 function normalizeSeason(val) {
   if (val === undefined || val === null) {
     showSeriesError("Season is required.");
@@ -479,17 +339,7 @@ function showSeriesError(msg) {
   seriesError.style.display = "block";
 }
 
-function showSeriesMessage(msg) {
-  seriesError.textContent = msg;
-  seriesError.style.display = "block";
-  setTimeout(() => {
-    seriesError.style.display = "none";
-  }, 4000);
-}
-
-// ---------------------------
 // UTIL
-// ---------------------------
 function escapeHtml(str) {
   return String(str || "")
     .replace(/&/g, "&amp;")
