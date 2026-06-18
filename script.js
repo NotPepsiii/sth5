@@ -1,9 +1,14 @@
-// 🔑 Your TMDB API key
+// ---------------------------
+// CONFIG
+// ---------------------------
 const TMDB_API_KEY = "35ee82bcad013e6a6237a0a087d7eb32";
-
 const TMDB_BASE = "https://api.themoviedb.org/3";
 const TMDB_IMG = "https://image.tmdb.org/t/p/w300";
+const EMBED_BASE = "https://embedmaster.link"; // confirmed working domain
 
+// ---------------------------
+// DOM
+// ---------------------------
 const player = document.getElementById("player");
 
 const searchInput = document.getElementById("searchInput");
@@ -18,8 +23,11 @@ const horrorRow = document.getElementById("horrorRow");
 const comedyRow = document.getElementById("comedyRow");
 const seriesRow = document.getElementById("seriesRow");
 
-// Load everything on start
+// ---------------------------
+// INIT
+// ---------------------------
 document.addEventListener("DOMContentLoaded", () => {
+  // load rows in parallel
   loadPopularMovies();
   loadTopRatedMovies();
   loadGenreMovies(28, actionRow);   // Action
@@ -28,77 +36,77 @@ document.addEventListener("DOMContentLoaded", () => {
   loadPopularSeries();
 });
 
+// ---------------------------
+// SEARCH
+// ---------------------------
 searchBtn.addEventListener("click", () => {
-  const query = searchInput.value.trim();
-  if (!query) return;
-  searchAll(query);
+  const q = searchInput.value.trim();
+  if (!q) return;
+  searchAll(q);
 });
-
 searchInput.addEventListener("keydown", (e) => {
   if (e.key === "Enter") searchBtn.click();
 });
 
-// ---- Movies ----
-
-function loadPopularMovies() {
-  fetch(`${TMDB_BASE}/movie/popular?api_key=${TMDB_API_KEY}&language=en-US&page=1`)
-    .then(res => res.json())
-    .then(data => renderRow(data.results, popularRow, false))
-    .catch(err => console.error("Popular movies error:", err));
+// ---------------------------
+// FETCH HELPERS
+// ---------------------------
+async function fetchJson(url) {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.error("Fetch error:", err, url);
+    return null;
+  }
 }
 
-function loadTopRatedMovies() {
-  fetch(`${TMDB_BASE}/movie/top_rated?api_key=${TMDB_API_KEY}&language=en-US&page=1`)
-    .then(res => res.json())
-    .then(data => renderRow(data.results, topRatedRow, false))
-    .catch(err => console.error("Top rated error:", err));
+// ---------------------------
+// LOADERS
+// ---------------------------
+async function loadPopularMovies() {
+  const data = await fetchJson(`${TMDB_BASE}/movie/popular?api_key=${TMDB_API_KEY}&language=en-US&page=1`);
+  renderRow(data?.results || [], popularRow, false);
 }
 
-function loadGenreMovies(genreId, container) {
-  fetch(`${TMDB_BASE}/discover/movie?api_key=${TMDB_API_KEY}&language=en-US&with_genres=${genreId}&page=1`)
-    .then(res => res.json())
-    .then(data => renderRow(data.results, container, false))
-    .catch(err => console.error("Genre error:", err));
+async function loadTopRatedMovies() {
+  const data = await fetchJson(`${TMDB_BASE}/movie/top_rated?api_key=${TMDB_API_KEY}&language=en-US&page=1`);
+  renderRow(data?.results || [], topRatedRow, false);
 }
 
-// ---- TV Series ----
-
-function loadPopularSeries() {
-  fetch(`${TMDB_BASE}/tv/popular?api_key=${TMDB_API_KEY}&language=en-US&page=1`)
-    .then(res => res.json())
-    .then(data => renderRow(data.results, seriesRow, true))
-    .catch(err => console.error("Series error:", err));
+async function loadGenreMovies(genreId, container) {
+  const data = await fetchJson(`${TMDB_BASE}/discover/movie?api_key=${TMDB_API_KEY}&language=en-US&with_genres=${genreId}&page=1`);
+  renderRow(data?.results || [], container, false);
 }
 
-// ---- Search ----
-
-function searchAll(query) {
-  Promise.all([
-    fetch(`${TMDB_BASE}/search/movie?api_key=${TMDB_API_KEY}&language=en-US&query=${encodeURIComponent(query)}&page=1&include_adult=false`).then(r => r.json()),
-    fetch(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&language=en-US&query=${encodeURIComponent(query)}&page=1&include_adult=false`).then(r => r.json())
-  ])
-    .then(([movieData, tvData]) => {
-      searchRow.innerHTML = "";
-      const combined = [
-        ...(movieData.results || []).map(m => ({ ...m, _isTv: false })),
-        ...(tvData.results || []).map(t => ({ ...t, _isTv: true }))
-      ];
-      if (combined.length === 0) {
-        searchRow.innerHTML = "<p>No results.</p>";
-      } else {
-        renderRow(combined, searchRow, null); // mixed
-      }
-      searchSection.style.display = "block";
-      searchSection.scrollIntoView({ behavior: "smooth" });
-    })
-    .catch(err => console.error("Search error:", err));
+async function loadPopularSeries() {
+  const data = await fetchJson(`${TMDB_BASE}/tv/popular?api_key=${TMDB_API_KEY}&language=en-US&page=1`);
+  renderRow(data?.results || [], seriesRow, true);
 }
 
-// ---- Render ----
+// ---------------------------
+// SEARCH (movies + tv)
+// ---------------------------
+async function searchAll(query) {
+  searchSection.style.display = "block";
+  searchRow.innerHTML = `<p>Searching for "${escapeHtml(query)}"…</p>`;
+  const [movies, tv] = await Promise.all([
+    fetchJson(`${TMDB_BASE}/search/movie?api_key=${TMDB_API_KEY}&language=en-US&query=${encodeURIComponent(query)}&page=1&include_adult=false`),
+    fetchJson(`${TMDB_BASE}/search/tv?api_key=${TMDB_API_KEY}&language=en-US&query=${encodeURIComponent(query)}&page=1&include_adult=false`)
+  ]);
+  const movieResults = (movies?.results || []).map(m => ({ ...m, _isTv: false }));
+  const tvResults = (tv?.results || []).map(t => ({ ...t, _isTv: true }));
+  const combined = [...movieResults, ...tvResults];
+  renderRow(combined, searchRow, null); // mixed
+  searchSection.scrollIntoView({ behavior: "smooth" });
+}
 
-function renderRow(items, container, isTv) {
+// ---------------------------
+// RENDER
+// ---------------------------
+function renderRow(items, container, isTvFlag) {
   container.innerHTML = "";
-
   if (!items || items.length === 0) {
     container.innerHTML = "<p>No items.</p>";
     return;
@@ -108,10 +116,8 @@ function renderRow(items, container, isTv) {
     const card = document.createElement("div");
     card.className = "movie-card";
 
-    const posterPath = item.poster_path || item.backdrop_path;
-    const poster = posterPath
-      ? `${TMDB_IMG}${posterPath}`
-      : "https://via.placeholder.com/300x450?text=No+Image";
+    const posterPath = item.poster_path || item.backdrop_path || "";
+    const poster = posterPath ? `${TMDB_IMG}${posterPath}` : "https://via.placeholder.com/300x450?text=No+Image";
 
     const title = item.title || item.name || "Untitled";
     const year = (item.release_date || item.first_air_date || "N/A").slice(0, 4);
@@ -125,26 +131,30 @@ function renderRow(items, container, isTv) {
       </div>
     `;
 
+    // click handler: determine movie vs tv
     card.addEventListener("click", () => {
       const tmdbId = item.id;
-      const tvFlag = typeof isTv === "boolean" ? isTv : !!item._isTv;
+      const tvFlag = (typeof isTvFlag === "boolean") ? isTvFlag : !!item._isTv;
+      const embedUrl = tvFlag ? `${EMBED_BASE}/tv/${tmdbId}` : `${EMBED_BASE}/movie/${tmdbId}`;
 
-      // Movies vs TV series
-      const embedUrl = tvFlag
-        ? `https://embedmaster.link/tv/${tmdbId}`
-        : `https://embedmaster.link/movie/${tmdbId}`;
-
+      // set iframe src
       player.src = embedUrl;
+
+      // small UX: scroll player into view on small screens
+      if (window.innerWidth < 900) {
+        document.querySelector(".player-section").scrollIntoView({ behavior: "smooth" });
+      }
     });
 
     container.appendChild(card);
   });
 }
 
-// ---- Utils ----
-
+// ---------------------------
+// UTIL
+// ---------------------------
 function escapeHtml(str) {
-  return String(str)
+  return String(str || "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
