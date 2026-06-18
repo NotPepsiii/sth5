@@ -5,14 +5,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Disney UI v2 — My Movie Site</title>
   <link rel="stylesheet" href="style.css" />
-  <!-- Recommended CSP (set on server): 
-       Content-Security-Policy: default-src 'self'; img-src 'self' https://image.tmdb.org https://via.placeholder.com; frame-src 'self' https://www.youtube.com; script-src 'self'; style-src 'self' 'unsafe-inline';
-  -->
 </head>
 <body>
   <header class="site-header" role="banner">
     <div class="header-inner">
-      <a class="logo" href="/" aria-label="Home">
+      <a class="logo" href="/" aria-label="Home" type="button">
         <svg width="36" height="36" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#00b0ff"/></svg>
         <span class="brand">My Movie Site</span>
       </a>
@@ -45,7 +42,7 @@
           <h1 id="heroTitle">Featured</h1>
           <p id="heroOverview">Curated picks and new releases.</p>
           <div class="hero-actions">
-            <button id="playHero" class="btn-cta" type="button">Play</button>
+            <button id="playHero" class="btn-cta" type="button">Play Full</button>
             <button id="moreHero" class="btn-ghost" type="button">More Info</button>
           </div>
         </div>
