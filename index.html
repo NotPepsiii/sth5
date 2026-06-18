@@ -19,7 +19,7 @@
   </div>
 
   <div id="app" class="app" style="display:none;">
-    <header class="top-nav">
+    <header class="top-nav" id="topNav">
       <div class="nav-left">
         <h1 class="logo">PepsiMovies</h1>
         <button id="myListNavBtn" class="nav-link">My List</button>
@@ -34,16 +34,16 @@
       </div>
     </header>
 
-    <main>
-      <section class="hero">
-        <iframe id="player" title="Trailer player" allowfullscreen frameborder="0"></iframe>
+    <main id="mainContent">
+      <section class="hero" id="heroSection">
+        <iframe id="player" title="Movie player" allowfullscreen frameborder="0"></iframe>
         <div class="hero-overlay">
           <p class="hero-kicker">Featured Movie</p>
           <h2 id="heroTitle">Loading...</h2>
           <p id="heroOverview" class="hero-overview"></p>
 
           <div class="hero-actions">
-            <button id="heroPlayBtn" class="primary-btn">Play Trailer</button>
+            <button id="heroPlayBtn" class="primary-btn">Play</button>
             <button id="heroListBtn" class="secondary-btn">+ My List</button>
             <button id="heroDetailsBtn" class="secondary-btn">Details</button>
           </div>
@@ -103,7 +103,7 @@
         <p id="modalMeta" class="modal-meta"></p>
         <p id="modalOverview" class="modal-overview"></p>
         <div class="modal-actions">
-          <button id="modalPlayBtn" class="primary-btn">Play Trailer</button>
+          <button id="modalPlayBtn" class="primary-btn">Play</button>
           <button id="modalListBtn" class="secondary-btn">+ My List</button>
         </div>
       </div>
