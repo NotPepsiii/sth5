@@ -13,16 +13,16 @@
   <header class="site-header" role="banner">
     <div class="header-inner">
       <a class="logo" href="/" aria-label="Home">
-        <svg width="36" height="36" viewBox="0 0 24 24" aria-hidden="true"><!-- simple mark --><circle cx="12" cy="12" r="10" fill="#00b0ff"/></svg>
+        <svg width="36" height="36" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#00b0ff"/></svg>
         <span class="brand">My Movie Site</span>
       </a>
 
       <nav class="primary-nav" role="navigation" aria-label="Primary">
-        <button class="nav-btn active" data-section="home">Home</button>
-        <button class="nav-btn" data-section="movies">Movies</button>
-        <button class="nav-btn" data-section="series">Series</button>
-        <button class="nav-btn" data-section="originals">Originals</button>
-        <button class="nav-btn" data-section="kids">Kids</button>
+        <button class="nav-btn active" data-section="home" type="button">Home</button>
+        <button class="nav-btn" data-section="movies" type="button">Movies</button>
+        <button class="nav-btn" data-section="series" type="button">Series</button>
+        <button class="nav-btn" data-section="originals" type="button">Originals</button>
+        <button class="nav-btn" data-section="kids" type="button">Kids</button>
       </nav>
 
       <div class="header-actions">
@@ -30,8 +30,8 @@
           <label for="searchInput" class="visually-hidden">Search movies</label>
           <input id="searchInput" type="search" placeholder="Search for a movie, show, or character" aria-label="Search movies" />
         </div>
-        <button id="searchBtn" class="btn-primary" aria-label="Search">Search</button>
-        <button id="profileBtn" class="profile-btn" aria-haspopup="true" aria-expanded="false" aria-label="Profile">
+        <button id="searchBtn" class="btn-primary" type="button" aria-label="Search">Search</button>
+        <button id="profileBtn" class="profile-btn" aria-haspopup="true" aria-expanded="false" aria-label="Profile" type="button">
           <img src="https://via.placeholder.com/40?text=U" alt="Profile" />
         </button>
       </div>
@@ -45,8 +45,8 @@
           <h1 id="heroTitle">Featured</h1>
           <p id="heroOverview">Curated picks and new releases.</p>
           <div class="hero-actions">
-            <button id="playHero" class="btn-cta">Play</button>
-            <button id="moreHero" class="btn-ghost">More Info</button>
+            <button id="playHero" class="btn-cta" type="button">Play</button>
+            <button id="moreHero" class="btn-ghost" type="button">More Info</button>
           </div>
         </div>
         <div class="hero-art" aria-hidden="true"></div>
@@ -69,7 +69,7 @@
   <div id="playerModal" class="modal" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="modal-backdrop" data-dismiss="modal"></div>
     <div class="modal-panel" role="document">
-      <button class="modal-close" aria-label="Close player">&times;</button>
+      <button class="modal-close" aria-label="Close player" type="button">&times;</button>
       <div id="playerContainer" class="player-container" aria-live="polite"></div>
     </div>
   </div>
