@@ -1,3 +1,4 @@
+// script.js - full working file (replace your existing script.js with this)
 const TMDB_API_KEY = "35ee82bcad013e6a6237a0a087d7eb32";
 const TMDB_BASE = "https://api.themoviedb.org/3";
 const TMDB_IMG = "https://image.tmdb.org/t/p/w500";
@@ -115,7 +116,9 @@ function wireUI() {
     if (e.key === "Escape") closeModal();
   });
 
-  dom.closePlayerBtn.addEventListener("click", closeFullscreenPlayer);
+  if (dom.closePlayerBtn) {
+    dom.closePlayerBtn.addEventListener("click", closeFullscreenPlayer);
+  }
 }
 
 function showProfileScreen() {
@@ -177,8 +180,8 @@ async function loadAllRows() {
     fetchMovies("/movie/popular?page=1"),
     fetchMovies("/movie/top_rated?page=1"),
     fetchMovies("/discover/movie?with_genres=28&page=1"),
-    fetchMovies("/discover/movie?with_genres=27?page=1"),
-    fetchMovies("/discover/movie?with_genres=35?page=1")
+    fetchMovies("/discover/movie?with_genres=27&page=1"),
+    fetchMovies("/discover/movie?with_genres=35&page=1")
   ]);
 
   renderRow(popular, dom.popularRow);
@@ -412,13 +415,29 @@ async function playMovie(movie) {
     return;
   }
 
-  dom.fullscreen.style.display = "flex";
-  dom.fullscreenIframe.src = `https://embedmaster.com/?ref=embdmstrplayer.com&imdb=${imdbId}`;
+  // Save continue and hero state
+  saveContinue(movie);
+  setHeroMovie(movie, true);
 
-  dom.playerStatus.textContent = "Playing movie";
+  // Show fullscreen overlay and load EmbedMaster with IMDb ID
+  if (dom.fullscreen && dom.fullscreenIframe) {
+    dom.fullscreen.style.display = "flex";
+    // Use embedmaster URL with imdb param
+    dom.fullscreenIframe.src = `https://embedmaster.com/?ref=embdmstrplayer.com&imdb=${encodeURIComponent(imdbId)}`;
+    dom.playerStatus.textContent = "Playing movie";
+  } else {
+    // Fallback: if overlay missing, try loading into hero iframe
+    const heroIframe = document.getElementById("player");
+    if (heroIframe) {
+      heroIframe.src = `https://embedmaster.com/?ref=embdmstrplayer.com&imdb=${encodeURIComponent(imdbId)}`;
+      dom.playerStatus.textContent = "Playing movie";
+    } else {
+      dom.playerStatus.textContent = "Player not available.";
+    }
+  }
 }
 
 function closeFullscreenPlayer() {
-  dom.fullscreenIframe.src = "";
-  dom.fullscreen.style.display = "none";
+  if (dom.fullscreenIframe) dom.fullscreenIframe.src = "";
+  if (dom.fullscreen) dom.fullscreen.style.display = "none";
 }
