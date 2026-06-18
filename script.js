@@ -23,6 +23,21 @@ const horrorRow = document.getElementById("horrorRow");
 const comedyRow = document.getElementById("comedyRow");
 const seriesRow = document.getElementById("seriesRow");
 
+const tabMovies = document.getElementById("tabMovies");
+const tabSeries = document.getElementById("tabSeries");
+const moviesView = document.getElementById("moviesView");
+const seriesView = document.getElementById("seriesView");
+
+const seriesPanel = document.getElementById("seriesPanel");
+const closeSeriesPanel = document.getElementById("closeSeriesPanel");
+const seriesTitle = document.getElementById("seriesTitle");
+const seriesOverview = document.getElementById("seriesOverview");
+const seasonSelect = document.getElementById("seasonSelect");
+const episodeSelect = document.getElementById("episodeSelect");
+const playEpisodeBtn = document.getElementById("playEpisodeBtn");
+const seriesError = document.getElementById("seriesError");
+const episodeList = document.getElementById("episodeList");
+
 // ---------------------------
 // INIT
 // ---------------------------
@@ -34,6 +49,25 @@ document.addEventListener("DOMContentLoaded", () => {
   loadGenreMovies(27, horrorRow);   // Horror
   loadGenreMovies(35, comedyRow);   // Comedy
   loadPopularSeries();
+});
+
+// ---------------------------
+// Tabs
+// ---------------------------
+tabMovies.addEventListener("click", () => {
+  tabMovies.classList.add("active");
+  tabSeries.classList.remove("active");
+  moviesView.style.display = "";
+  seriesView.style.display = "none";
+  seriesPanel.style.display = "none";
+});
+
+tabSeries.addEventListener("click", () => {
+  tabSeries.classList.add("active");
+  tabMovies.classList.remove("active");
+  moviesView.style.display = "none";
+  seriesView.style.display = "";
+  seriesPanel.style.display = "none";
 });
 
 // ---------------------------
@@ -135,19 +169,214 @@ function renderRow(items, container, isTvFlag) {
     card.addEventListener("click", () => {
       const tmdbId = item.id;
       const tvFlag = (typeof isTvFlag === "boolean") ? isTvFlag : !!item._isTv;
-      const embedUrl = tvFlag ? `${EMBED_BASE}/tv/${tmdbId}` : `${EMBED_BASE}/movie/${tmdbId}`;
 
-      // set iframe src
-      player.src = embedUrl;
-
-      // small UX: scroll player into view on small screens
-      if (window.innerWidth < 900) {
-        document.querySelector(".player-section").scrollIntoView({ behavior: "smooth" });
+      if (tvFlag) {
+        // open series panel and load seasons/episodes
+        openSeriesPanel(tmdbId);
+      } else {
+        // movie: set iframe src directly
+        const embedUrl = `${EMBED_BASE}/movie/${tmdbId}`;
+        player.src = embedUrl;
+        // scroll to player on small screens
+        if (window.innerWidth < 900) document.querySelector(".player-section").scrollIntoView({ behavior: "smooth" });
       }
     });
 
     container.appendChild(card);
   });
+}
+
+// ---------------------------
+// SERIES PANEL / SEASONS / EPISODES
+// ---------------------------
+let currentSeriesId = null;
+let currentSeasons = []; // array of {season_number, name, episode_count}
+let currentEpisodes = []; // episodes for selected season
+
+async function openSeriesPanel(tvId) {
+  seriesError.style.display = "none";
+  episodeList.innerHTML = "";
+  seasonSelect.innerHTML = "";
+  episodeSelect.innerHTML = "";
+  seriesPanel.style.display = "block";
+  currentSeriesId = tvId;
+
+  // fetch series details
+  const details = await fetchJson(`${TMDB_BASE}/tv/${tvId}?api_key=${TMDB_API_KEY}&language=en-US`);
+  if (!details) {
+    seriesError.textContent = "Failed to load series details.";
+    seriesError.style.display = "block";
+    return;
+  }
+
+  seriesTitle.textContent = details.name || details.original_name || "Series";
+  seriesOverview.textContent = details.overview || "";
+
+  // seasons array
+  currentSeasons = (details.seasons || []).filter(s => typeof s.season_number === "number");
+
+  // populate season select (sort by season_number ascending)
+  currentSeasons.sort((a,b) => a.season_number - b.season_number);
+  seasonSelect.innerHTML = "";
+  currentSeasons.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = String(s.season_number);
+    opt.textContent = `Season ${s.season_number} ${s.name ? `- ${s.name}` : ""}`;
+    seasonSelect.appendChild(opt);
+  });
+
+  if (currentSeasons.length === 0) {
+    seriesError.textContent = "No seasons available for this series.";
+    seriesError.style.display = "block";
+    return;
+  }
+
+  // auto-select the first season
+  const firstSeason = currentSeasons[0].season_number;
+  await loadSeasonEpisodes(tvId, firstSeason);
+}
+
+closeSeriesPanel.addEventListener("click", () => {
+  seriesPanel.style.display = "none";
+});
+
+// when season changes
+seasonSelect.addEventListener("change", async () => {
+  const seasonVal = seasonSelect.value;
+  const seasonNum = normalizeSeason(seasonVal);
+  if (seasonNum === null) return; // error shown by normalizeSeason
+  await loadSeasonEpisodes(currentSeriesId, seasonNum);
+});
+
+// when episode select changes, highlight selection (no extra action)
+episodeSelect.addEventListener("change", () => {
+  // nothing else needed here
+});
+
+// play button
+playEpisodeBtn.addEventListener("click", () => {
+  const seasonVal = seasonSelect.value;
+  const episodeVal = episodeSelect.value;
+  const seasonNum = normalizeSeason(seasonVal);
+  const episodeNum = normalizeEpisode(episodeVal);
+  if (seasonNum === null || episodeNum === null) return;
+
+  const embedUrl = `${EMBED_BASE}/tv/${currentSeriesId}/season/${seasonNum}/episode/${episodeNum}`;
+  player.src = embedUrl;
+  if (window.innerWidth < 900) document.querySelector(".player-section").scrollIntoView({ behavior: "smooth" });
+});
+
+// load episodes for a season
+async function loadSeasonEpisodes(tvId, seasonNumber) {
+  seriesError.style.display = "none";
+  episodeList.innerHTML = "<p>Loading episodes…</p>";
+  episodeSelect.innerHTML = "";
+
+  // validate seasonNumber again
+  const seasonNum = normalizeSeason(seasonNumber);
+  if (seasonNum === null) {
+    episodeList.innerHTML = "";
+    return;
+  }
+
+  const data = await fetchJson(`${TMDB_BASE}/tv/${tvId}/season/${seasonNum}?api_key=${TMDB_API_KEY}&language=en-US`);
+  if (!data) {
+    seriesError.textContent = "Failed to load season data.";
+    seriesError.style.display = "block";
+    episodeList.innerHTML = "";
+    return;
+  }
+
+  currentEpisodes = data.episodes || [];
+  episodeList.innerHTML = "";
+
+  if (!currentEpisodes.length) {
+    episodeList.innerHTML = "<p>No episodes found for this season.</p>";
+    return;
+  }
+
+  // populate episode select and list
+  episodeSelect.innerHTML = "";
+  currentEpisodes.forEach(ep => {
+    const epNum = ep.episode_number;
+    const opt = document.createElement("option");
+    opt.value = String(epNum);
+    opt.textContent = `${epNum}. ${ep.name || `Episode ${epNum}`}`;
+    episodeSelect.appendChild(opt);
+
+    const item = document.createElement("div");
+    item.className = "episode-item";
+    item.innerHTML = `<strong>${epNum}. ${escapeHtml(ep.name || `Episode ${epNum}`)}</strong><div class="muted">${escapeHtml(ep.overview || "")}</div>`;
+    item.addEventListener("click", () => {
+      // set selects and play
+      seasonSelect.value = String(seasonNum);
+      episodeSelect.value = String(epNum);
+      const embedUrl = `${EMBED_BASE}/tv/${tvId}/season/${seasonNum}/episode/${epNum}`;
+      player.src = embedUrl;
+      if (window.innerWidth < 900) document.querySelector(".player-section").scrollIntoView({ behavior: "smooth" });
+    });
+    episodeList.appendChild(item);
+  });
+
+  // auto-select first episode
+  episodeSelect.selectedIndex = 0;
+  episodeList.scrollTop = 0;
+}
+
+// ---------------------------
+// VALIDATION / NORMALIZATION
+// ---------------------------
+function normalizeSeason(val) {
+  // Accept numbers or numeric strings. Reject leading zeros (except "0").
+  if (val === undefined || val === null) {
+    showSeriesError("Season is required.");
+    return null;
+  }
+  const s = String(val).trim();
+  if (!/^\d+$/.test(s)) {
+    showSeriesError("Invalid season (must be numeric).");
+    return null;
+  }
+  // reject leading zeros like "01", but allow "0"
+  if (s.length > 1 && s.startsWith("0")) {
+    showSeriesError("Invalid season (no leading zeros).");
+    return null;
+  }
+  const n = Number(s);
+  if (n < 0 || n > 9999) {
+    showSeriesError("Invalid season (must be 0-9999).");
+    return null;
+  }
+  seriesError.style.display = "none";
+  return String(n);
+}
+
+function normalizeEpisode(val) {
+  if (val === undefined || val === null) {
+    showSeriesError("Episode is required.");
+    return null;
+  }
+  const s = String(val).trim();
+  if (!/^\d+$/.test(s)) {
+    showSeriesError("Invalid episode (must be numeric).");
+    return null;
+  }
+  if (s.length > 1 && s.startsWith("0")) {
+    showSeriesError("Invalid episode (no leading zeros).");
+    return null;
+  }
+  const n = Number(s);
+  if (n < 0 || n > 9999) {
+    showSeriesError("Invalid episode (must be 0-9999).");
+    return null;
+  }
+  seriesError.style.display = "none";
+  return String(n);
+}
+
+function showSeriesError(msg) {
+  seriesError.textContent = msg;
+  seriesError.style.display = "block";
 }
 
 // ---------------------------
