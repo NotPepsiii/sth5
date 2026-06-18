@@ -1,134 +1,100 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: Arial, Helvetica, sans-serif;
-}
+/* Basic reset */
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
 
 body {
   background: #000;
   color: #fff;
-  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-y: auto;
 }
 
-/* Top Navigation */
+/* Top nav */
 .top-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
-  background: #111;
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  padding: 14px 20px;
+  background: linear-gradient(180deg, rgba(0,0,0,0.9), rgba(0,0,0,0.6));
+  border-bottom: 1px solid rgba(255,255,255,0.03);
 }
 
-.logo {
-  font-size: 2rem;
-  font-weight: bold;
-  color: #e50914;
-}
+.logo { color: #e50914; font-size: 1.6rem; font-weight: 700; letter-spacing: 0.5px; }
 
-.search-box {
-  display: flex;
-  gap: 0.5rem;
-}
-
+.search-box { display: flex; gap: 8px; align-items: center; }
 .search-box input {
-  padding: 0.5rem 1rem;
-  width: 260px;
-  border-radius: 4px;
+  width: 300px;
+  max-width: 45vw;
+  padding: 8px 12px;
+  border-radius: 6px;
   border: none;
-  outline: none;
+  background: #111;
+  color: #fff;
+  outline: 2px solid rgba(255,255,255,0.03);
 }
-
 .search-box button {
-  padding: 0.5rem 1rem;
-  background: #e50914;
+  padding: 8px 12px;
+  border-radius: 6px;
   border: none;
+  background: #e50914;
   color: #fff;
   cursor: pointer;
-  border-radius: 4px;
   font-weight: 600;
 }
-
-.search-box button:hover {
-  background: #b20710;
-}
+.search-box button:hover { background: #b20710; }
 
 /* Player */
 .player-section {
   width: 100%;
-  height: 480px;
-  background: #111;
-  margin-bottom: 2rem;
+  height: 520px;
+  background: linear-gradient(180deg,#0b0b0b,#0f0f0f);
+  margin-bottom: 22px;
 }
-
-.player-section iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-}
+.player-section iframe { width: 100%; height: 100%; border: none; }
 
 /* Categories */
-.category {
-  margin-bottom: 2rem;
-  padding: 0 2rem;
-}
+main { padding-bottom: 60px; }
+.category { margin-bottom: 26px; padding: 0 20px; }
+.category h2 { font-size: 1.25rem; margin-bottom: 10px; color: #fff; }
 
-.category h2 {
-  margin-bottom: 0.5rem;
-  font-size: 1.4rem;
-}
-
-/* Horizontal rows */
+/* Row */
 .row {
   display: flex;
-  gap: 0.75rem;
+  gap: 12px;
   overflow-x: auto;
-  padding-bottom: 0.5rem;
+  padding-bottom: 8px;
+  scroll-behavior: smooth;
 }
+.row::-webkit-scrollbar { height: 8px; }
+.row::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); border-radius: 6px; }
 
-.row::-webkit-scrollbar {
-  height: 8px;
-}
-
-.row::-webkit-scrollbar-thumb {
-  background: #333;
-  border-radius: 4px;
-}
-
-/* Cards */
+/* Card */
 .movie-card {
   min-width: 150px;
-  background: #111;
-  border-radius: 6px;
+  width: 150px;
+  background: #0b0b0b;
+  border-radius: 8px;
   overflow: hidden;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform .18s ease, box-shadow .18s ease;
+  flex: 0 0 auto;
 }
+.movie-card:hover { transform: translateY(-6px) scale(1.03); box-shadow: 0 12px 30px rgba(0,0,0,0.6); }
+.movie-card img { width: 100%; height: 225px; object-fit: cover; display: block; background: #111; }
+.movie-info { padding: 8px; }
+.movie-title { font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; color: #fff; }
+.movie-meta { font-size: 0.78rem; color: #bdbdbd; }
 
-.movie-card:hover {
-  transform: scale(1.08);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.7);
-}
+/* Empty states */
+.row p { color: #9aa0a6; padding: 12px; }
 
-.movie-card img {
-  width: 100%;
-  height: 225px;
-  object-fit: cover;
-}
-
-.movie-info {
-  padding: 0.5rem;
-}
-
-.movie-title {
-  font-size: 0.9rem;
-  font-weight: bold;
-}
-
-.movie-meta {
-  font-size: 0.75rem;
-  color: #aaa;
+/* Responsive */
+@media (max-width: 900px) {
+  .search-box input { width: 160px; }
+  .player-section { height: 360px; }
+  .movie-card { min-width: 120px; width: 120px; }
+  .movie-card img { height: 180px; }
 }
