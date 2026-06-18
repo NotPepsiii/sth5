@@ -133,6 +133,11 @@ async function searchAll(query) {
   const tvResults = (tv?.results || []).map(t => ({ ...t, _isTv: true }));
   const combined = [...movieResults, ...tvResults];
   renderRow(combined, searchRow, null); // mixed
+  // switch to movies tab view so search is visible
+  tabMovies.classList.add("active");
+  tabSeries.classList.remove("active");
+  moviesView.style.display = "";
+  seriesView.style.display = "none";
   searchSection.scrollIntoView({ behavior: "smooth" });
 }
 
@@ -173,6 +178,11 @@ function renderRow(items, container, isTvFlag) {
       if (tvFlag) {
         // open series panel and load seasons/episodes
         openSeriesPanel(tmdbId);
+        // ensure series tab is visible
+        tabSeries.classList.add("active");
+        tabMovies.classList.remove("active");
+        moviesView.style.display = "none";
+        seriesView.style.display = "";
       } else {
         // movie: set iframe src directly
         const embedUrl = `${EMBED_BASE}/movie/${tmdbId}`;
