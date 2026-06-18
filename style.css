@@ -1,3 +1,4 @@
+/* style.css - full file (unchanged + fullscreen styles appended) */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -466,4 +467,38 @@ button, input {
   .modal-poster {
     min-height: 260px;
   }
+}
+
+/* Fullscreen player styles appended */
+.fullscreen-player {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+.fullscreen-player iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: #000;
+}
+
+.close-player {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 10000;
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+  border: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  font-size: 22px;
+  cursor: pointer;
 }
