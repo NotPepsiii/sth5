@@ -91,20 +91,25 @@ document.getElementById("adblockBtn").addEventListener("click", () => {
   window.open("https://ublockorigin.com/", "_blank");
 });
 
-const howToBtn = document.getElementById("howToBtn");
-const howToPopup = document.getElementById("howToPopup");
-const closeHowTo = document.getElementById("closeHowTo");
+document.addEventListener("DOMContentLoaded", () => {
+  const howToBtn = document.getElementById("howToBtn");
+  const howToPopup = document.getElementById("howToPopup");
+  const closeHowTo = document.getElementById("closeHowTo");
 
-howToBtn.addEventListener("click", () => {
-  howToPopup.classList.remove("hidden");
-});
+  if (!howToBtn || !howToPopup || !closeHowTo) return;
 
-closeHowTo.addEventListener("click", () => {
-  howToPopup.classList.add("hidden");
-});
+  howToBtn.addEventListener("click", () => {
+    howToPopup.classList.remove("hidden");
+  });
 
-howToPopup.addEventListener("click", (e) => {
-  if (e.target === howToPopup) {
+  closeHowTo.addEventListener("click", () => {
     howToPopup.classList.add("hidden");
-  }
+  });
+
+  howToPopup.addEventListener("click", (e) => {
+    if (e.target === howToPopup) {
+      howToPopup.classList.add("hidden");
+    }
+  });
+});
 });
