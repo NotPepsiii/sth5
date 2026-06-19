@@ -14,101 +14,96 @@
 
 <body>
 
-<!-- INFO MODAL -->
-<div id="infoModal" class="modal hidden">
-  <div class="modal-box">
-    <h2>About PEPSITV</h2>
+  <!-- NAV -->
+  <header class="nav">
 
-    <p>
-      PEPSITV is a free movie browsing interface powered.<br><br>
+    <div class="logo">
+      PEPSI<span>TV</span>
+      <small class="ad-note">
+        An ad blocker is recommended to avoid ad popups but not required!
+      </small>
+    </div>
 
-      • Movies are fetched from an external service provider<br>
-      • Streams are provided via third-party embeds<br>
-      • No content is hosted on this site<br><br>
+    <div class="nav-center">
+      <input id="searchInput" type="text" placeholder="Search movies..." />
+      <button id="searchBtn">Search</button>
+    </div>
 
-      • You can install the recommended Ad blocker using the button beside info<br>
-      ✔ Ad blocker is recommended for best experience<br><br>
+    <div class="support">
 
-      Enjoy responsibly 🍿
-    </p>
+      <!-- INFO BUTTON (ADDED ONLY) -->
+      <button id="infoBtn">Info</button>
 
-    <button id="closeInfo">Close</button>
-  </div>
-</div>
+      <!-- Adblock install button -->
+      <button id="adblockBtn" class="adblock-btn">
+        Install Ad Blocker
+      </button>
 
-<!-- NAV -->
-<header class="nav">
+      <button id="supportBtn">Support developer Pepsi &lt;3</button>
+    </div>
 
-  <div class="logo">
-    PEPSI<span>TV</span>
-    <small class="ad-note">
-      An ad blocker is recommended to avoid ad popups but not required!
-    </small>
-  </div>
+  </header>
 
-  <div class="nav-center">
-    <input id="searchInput" type="text" placeholder="Search movies..." />
-    <button id="searchBtn">Search</button>
-  </div>
+  <!-- INFO POPUP (ADDED ONLY) -->
+  <div id="infoPopup" class="info-popup hidden">
+    <div class="info-box">
+      <p>
+        PEPSITV is a free movie browsing site using TMDB.<br><br>
 
-  <div class="support">
+        • Movies are fetched from external API<br>
+        • Streams are provided via third-party embeds<br>
+        • No content is hosted on this site<br><br>
 
-    <!-- INFO BUTTON -->
-    <button id="infoBtn" class="info-btn">Info</button>
+        Ad blocker is recommended for best experience.
+      </p>
 
-    <!-- AD BLOCK BUTTON -->
-    <button id="adblockBtn" class="adblock-btn">
-      Install Ad Blocker
-    </button>
-
-    <button id="supportBtn">Support developer Pepsi &lt;3</button>
+      <button id="closeInfo">Close</button>
+    </div>
   </div>
 
-</header>
-
-<!-- PLAYER -->
-<section class="hero">
-  <iframe id="player" allowfullscreen frameborder="0"></iframe>
-</section>
-
-<!-- CONTENT -->
-<main>
-
-  <section class="row">
-    <h2 id="sectionTitle">Popular Movies</h2>
-    <div id="movies" class="row-posters"></div>
+  <!-- PLAYER -->
+  <section class="hero">
+    <iframe id="player" allowfullscreen frameborder="0"></iframe>
   </section>
 
-  <section class="row">
-    <h2>Action</h2>
-    <div id="actionRow" class="row-posters"></div>
-  </section>
+  <!-- CONTENT -->
+  <main>
 
-  <section class="row">
-    <h2>Comedy</h2>
-    <div id="comedyRow" class="row-posters"></div>
-  </section>
+    <section class="row">
+      <h2 id="sectionTitle">Popular Movies</h2>
+      <div id="movies" class="row-posters"></div>
+    </section>
 
-  <section class="row">
-    <h2>Drama</h2>
-    <div id="dramaRow" class="row-posters"></div>
-  </section>
+    <section class="row">
+      <h2>Action</h2>
+      <div id="actionRow" class="row-posters"></div>
+    </section>
 
-  <section class="row">
-    <h2>Horror</h2>
-    <div id="horrorRow" class="row-posters"></div>
-  </section>
+    <section class="row">
+      <h2>Comedy</h2>
+      <div id="comedyRow" class="row-posters"></div>
+    </section>
 
-</main>
+    <section class="row">
+      <h2>Drama</h2>
+      <div id="dramaRow" class="row-posters"></div>
+    </section>
 
-<script src="script.js"></script>
+    <section class="row">
+      <h2>Horror</h2>
+      <div id="horrorRow" class="row-posters"></div>
+    </section>
 
-<!-- PAYPAL BUTTON -->
-<script>
-  document.getElementById("supportBtn").addEventListener("click", () => {
-    window.open("https://www.paypal.me/pepcolaa", "_blank");
-  });
-</script>
+  </main>
+
+  <script src="script.js"></script>
+
+  <!-- PAYPAL BUTTON -->
+  <script>
+    document.getElementById("supportBtn").addEventListener("click", () => {
+      window.open("https://www.paypal.me/pepcolaa", "_blank");
+    });
+  </script>
 
 </body>
 </html>
