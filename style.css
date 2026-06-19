@@ -77,12 +77,6 @@ body {
 .support {
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex-wrap: nowrap;
-}
-
-.support button {
-  white-space: nowrap;
 }
 
 #supportBtn {
@@ -179,13 +173,13 @@ main {
   font-weight: 600;
 }
 
-/* ADBLOCK BUTTON */
 .adblock-btn {
   background: #2b2b2b;
   color: white;
   border: 1px solid rgba(255,255,255,0.1);
   padding: 10px 12px;
   border-radius: 8px;
+  margin-right: 8px;
   cursor: pointer;
   transition: 0.2s ease;
 }
@@ -195,62 +189,41 @@ main {
   transform: translateY(-2px);
 }
 
-/* INFO BUTTON */
-.info-btn {
-  background: #1f1f1f;
-  color: white;
-  border: 1px solid rgba(255,255,255,0.1);
-  padding: 10px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: 0.2s ease;
-}
+/* ========================= */
+/* ✅ INFO POPUP (ADDED ONLY) */
+/* ========================= */
 
-.info-btn:hover {
-  background: #2a2a2a;
-  transform: translateY(-2px);
-}
-
-/* MODAL */
-.modal {
+.info-popup {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.75);
+  background: rgba(0,0,0,0.6);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 999;
+  z-index: 9999;
 }
 
-.modal.hidden {
+.info-popup.hidden {
   display: none;
 }
 
-.modal-box {
+.info-box {
   background: #111;
-  padding: 20px;
-  border-radius: 10px;
-  max-width: 420px;
+  padding: 16px;
+  border-radius: 8px;
+  max-width: 300px;
   color: white;
-  border: 1px solid rgba(255,255,255,0.1);
-}
-
-.modal-box h2 {
-  margin-bottom: 10px;
-}
-
-.modal-box p {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   line-height: 1.4;
-  color: rgba(255,255,255,0.85);
+  text-align: center;
 }
 
-.modal-box button {
-  margin-top: 15px;
+.info-box button {
+  margin-top: 10px;
   background: #e50914;
   border: none;
-  padding: 8px 12px;
+  padding: 6px 10px;
   color: white;
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: 5px;
 }
