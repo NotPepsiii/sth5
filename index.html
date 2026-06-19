@@ -35,90 +35,80 @@
     <button id="closeInfo">Close</button>
   </div>
 </div>
-  
-  <!-- NAV -->
-  <header class="nav">
 
-    <div class="logo">
-      PEPSI<span>TV</span>
-      <small class="ad-note">
-        An ad blocker is recommended to avoid ad popups but not required!
-      </small>
-<body>
+<!-- NAV -->
+<header class="nav">
 
-  <!-- NAV -->
-  <header class="nav">
+  <div class="logo">
+    PEPSI<span>TV</span>
+    <small class="ad-note">
+      An ad blocker is recommended to avoid ad popups but not required!
+    </small>
+  </div>
 
-    <div class="logo">
-      PEPSI<span>TV</span>
-      <small class="ad-note">
-        An ad blocker is recommended to avoid ad popups but not required!
-      </small>
-    </div>
+  <div class="nav-center">
+    <input id="searchInput" type="text" placeholder="Search movies..." />
+    <button id="searchBtn">Search</button>
+  </div>
 
-    <div class="nav-center">
-      <input id="searchInput" type="text" placeholder="Search movies..." />
-      <button id="searchBtn">Search</button>
-    </div>
+  <div class="support">
 
-    <div class="support">
+    <!-- INFO BUTTON -->
+    <button id="infoBtn" class="info-btn">Info</button>
 
-      <!-- INFO BUTTON (NEW - BEFORE ADBLOCK) -->
-      <button id="infoBtn" class="info-btn">Info</button>
+    <!-- AD BLOCK BUTTON -->
+    <button id="adblockBtn" class="adblock-btn">
+      Install Ad Blocker
+    </button>
 
-      <!-- AD BLOCK BUTTON -->
-      <button id="adblockBtn" class="adblock-btn">
-        Install Ad Blocker
-      </button>
+    <button id="supportBtn">Support developer Pepsi &lt;3</button>
+  </div>
 
-      <button id="supportBtn">Support developer Pepsi &lt;3</button>
-    </div>
+</header>
 
-  </header>
+<!-- PLAYER -->
+<section class="hero">
+  <iframe id="player" allowfullscreen frameborder="0"></iframe>
+</section>
 
-  <!-- PLAYER -->
-  <section class="hero">
-    <iframe id="player" allowfullscreen frameborder="0"></iframe>
+<!-- CONTENT -->
+<main>
+
+  <section class="row">
+    <h2 id="sectionTitle">Popular Movies</h2>
+    <div id="movies" class="row-posters"></div>
   </section>
 
-  <!-- CONTENT -->
-  <main>
+  <section class="row">
+    <h2>Action</h2>
+    <div id="actionRow" class="row-posters"></div>
+  </section>
 
-    <section class="row">
-      <h2 id="sectionTitle">Popular Movies</h2>
-      <div id="movies" class="row-posters"></div>
-    </section>
+  <section class="row">
+    <h2>Comedy</h2>
+    <div id="comedyRow" class="row-posters"></div>
+  </section>
 
-    <section class="row">
-      <h2>Action</h2>
-      <div id="actionRow" class="row-posters"></div>
-    </section>
+  <section class="row">
+    <h2>Drama</h2>
+    <div id="dramaRow" class="row-posters"></div>
+  </section>
 
-    <section class="row">
-      <h2>Comedy</h2>
-      <div id="comedyRow" class="row-posters"></div>
-    </section>
+  <section class="row">
+    <h2>Horror</h2>
+    <div id="horrorRow" class="row-posters"></div>
+  </section>
 
-    <section class="row">
-      <h2>Drama</h2>
-      <div id="dramaRow" class="row-posters"></div>
-    </section>
+</main>
 
-    <section class="row">
-      <h2>Horror</h2>
-      <div id="horrorRow" class="row-posters"></div>
-    </section>
+<script src="script.js"></script>
 
-  </main>
-
-  <script src="script.js"></script>
-
-  <!-- PAYPAL BUTTON -->
-  <script>
-    document.getElementById("supportBtn").addEventListener("click", () => {
-      window.open("https://www.paypal.me/pepcolaa", "_blank");
-    });
-  </script>
+<!-- PAYPAL BUTTON -->
+<script>
+  document.getElementById("supportBtn").addEventListener("click", () => {
+    window.open("https://www.paypal.me/pepcolaa", "_blank");
+  });
+</script>
 
 </body>
 </html>
