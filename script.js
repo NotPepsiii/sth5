@@ -86,3 +86,7 @@ function renderMovies(movies, container) {
     container.appendChild(card);
   });
 }
+
+document.getElementById("adblockBtn").addEventListener("click", () => {
+  window.open("https://ublockorigin.com/", "_blank");
+});
