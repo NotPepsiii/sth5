@@ -90,26 +90,3 @@ function renderMovies(movies, container) {
 document.getElementById("adblockBtn").addEventListener("click", () => {
   window.open("https://ublockorigin.com/", "_blank");
 });
-
-document.addEventListener("DOMContentLoaded", () => {
-  const howToBtn = document.getElementById("howToBtn");
-  const howToPopup = document.getElementById("howToPopup");
-  const closeHowTo = document.getElementById("closeHowTo");
-
-  if (!howToBtn || !howToPopup || !closeHowTo) return;
-
-  howToBtn.addEventListener("click", () => {
-    howToPopup.classList.remove("hidden");
-  });
-
-  closeHowTo.addEventListener("click", () => {
-    howToPopup.classList.add("hidden");
-  });
-
-  howToPopup.addEventListener("click", (e) => {
-    if (e.target === howToPopup) {
-      howToPopup.classList.add("hidden");
-    }
-  });
-});
-});
